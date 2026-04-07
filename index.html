@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="color-scheme" content="light" />
+  <title>Buildman Inc. — Invoices &amp; Quotes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Arvo:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <a class="skip-link no-print" href="#main">Skip to main content</a>
+
+  <header class="app-bar no-print" role="banner">
+    <div class="app-bar__inner">
+      <div class="app-bar__top-row">
+        <div class="brand-mini" aria-hidden="true">
+          <span class="brand-mini__name">BUILDMAN</span>
+          <span class="brand-mini__tag">CUSTOM BUILD</span>
+        </div>
+        <nav class="mode-switch" aria-label="Document type">
+          <button type="button" class="mode-switch__btn is-active" data-mode="invoice" id="mode-invoice">Invoice</button>
+          <button type="button" class="mode-switch__btn" data-mode="quote" id="mode-quote">Quote</button>
+        </nav>
+      </div>
+      <div class="toolbar toolbar--scroll" role="toolbar" aria-label="Document actions">
+        <button type="button" class="btn btn--ghost" id="btn-new-invoice">New invoice</button>
+        <button type="button" class="btn btn--ghost" id="btn-new-quote">New quote</button>
+        <button type="button" class="btn btn--ghost" id="btn-duplicate">Duplicate</button>
+        <button type="button" class="btn btn--ghost" id="btn-reset">Reset</button>
+        <button type="button" class="btn" id="btn-print">Print PDF</button>
+        <button type="button" class="btn btn--ghost" id="btn-export-pdf">Export PDF</button>
+        <label class="btn btn--ghost file-import">
+          Import PDF
+          <input type="file" id="import-pdf" accept="application/pdf,.pdf" hidden />
+        </label>
+        <button type="button" class="btn btn--ghost" id="btn-share">Share</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="main">
+    <aside class="panel panel--controls no-print" aria-label="Editor and options">
+      <section class="control-block" aria-labelledby="calc-heading">
+        <h2 id="calc-heading" class="control-block__title">Totals &amp; tax</h2>
+        <label class="toggle">
+          <input type="checkbox" id="auto-totals" checked />
+          <span>Auto-calculate totals</span>
+        </label>
+        <p class="hint" id="auto-totals-hint">When on, subtotals update from line items. You can still type overrides; use “Sync from lines” to refresh.</p>
+        <div class="field-row">
+          <label for="tax-rate">Tax rate (HST/GST)</label>
+          <input type="text" id="tax-rate" inputmode="decimal" class="input input--narrow" aria-describedby="auto-totals-hint" />
+        </div>
+        <button type="button" class="btn btn--small btn--ghost" id="btn-sync-totals">Sync from lines</button>
+      </section>
+
+      <div id="editor-invoice" class="editor" hidden>
+        <h2 class="editor__title">Invoice fields</h2>
+        <fieldset class="fieldset">
+          <legend>Header</legend>
+          <label for="inv-number">Invoice number</label>
+          <input type="text" id="inv-number" class="input" autocomplete="off" />
+          <label for="inv-date">Date</label>
+          <input type="text" id="inv-date" class="input" placeholder="e.g. 2026-01-20" autocomplete="off" />
+          <label for="inv-sales">Sales person</label>
+          <input type="text" id="inv-sales" class="input" autocomplete="off" />
+          <label for="inv-order">Your order no.</label>
+          <input type="text" id="inv-order" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Bill to (To:)</legend>
+          <label for="inv-to-1">Line 1</label>
+          <input type="text" id="inv-to-1" class="input" autocomplete="off" />
+          <label for="inv-to-2">Line 2</label>
+          <input type="text" id="inv-to-2" class="input" autocomplete="off" />
+          <label for="inv-to-3">Line 3</label>
+          <input type="text" id="inv-to-3" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Line items</legend>
+          <div class="line-actions">
+            <button type="button" class="btn btn--small" id="inv-add-row">Add row</button>
+            <button type="button" class="btn btn--small btn--ghost" id="inv-del-row">Remove last row</button>
+          </div>
+          <div class="table-scroll">
+            <table class="edit-table" id="inv-lines-table">
+              <thead>
+                <tr>
+                  <th scope="col">Qty</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">Amount</th>
+                </tr>
+              </thead>
+              <tbody id="inv-lines-body"></tbody>
+            </table>
+          </div>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Totals</legend>
+          <label for="inv-subtotal">Subtotal</label>
+          <input type="text" id="inv-subtotal" class="input" inputmode="decimal" autocomplete="off" />
+          <label for="inv-hst">HST / GST</label>
+          <input type="text" id="inv-hst" class="input" inputmode="decimal" autocomplete="off" />
+          <label for="inv-pst">PST</label>
+          <input type="text" id="inv-pst" class="input" inputmode="decimal" autocomplete="off" />
+          <label for="inv-total">Total</label>
+          <input type="text" id="inv-total" class="input" inputmode="decimal" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Terms</legend>
+          <label for="inv-terms">Terms / notes</label>
+          <textarea id="inv-terms" class="input input--area" rows="4"></textarea>
+        </fieldset>
+      </div>
+
+      <div id="editor-quote" class="editor" hidden>
+        <h2 class="editor__title">Quote fields</h2>
+        <fieldset class="fieldset">
+          <legend>Quote metadata</legend>
+          <label for="qt-date">Quote date</label>
+          <input type="text" id="qt-date" class="input" autocomplete="off" />
+          <label for="qt-number">Quote number</label>
+          <input type="text" id="qt-number" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Customer</legend>
+          <label for="qt-cust-name">Name</label>
+          <input type="text" id="qt-cust-name" class="input" autocomplete="off" />
+          <label for="qt-cust-addr">Address</label>
+          <input type="text" id="qt-cust-addr" class="input" autocomplete="off" />
+          <label for="qt-cust-phone">Phone</label>
+          <input type="text" id="qt-cust-phone" class="input" autocomplete="off" />
+          <label for="qt-cust-email">Email</label>
+          <input type="text" id="qt-cust-email" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Buildman contact</legend>
+          <label for="qt-rep-name">Representative</label>
+          <input type="text" id="qt-rep-name" class="input" autocomplete="off" />
+          <label for="qt-rep-phone">Phone</label>
+          <input type="text" id="qt-rep-phone" class="input" autocomplete="off" />
+          <label for="qt-rep-email">Email</label>
+          <input type="text" id="qt-rep-email" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Scope section</legend>
+          <label for="qt-section">Section title</label>
+          <input type="text" id="qt-section" class="input" placeholder="e.g. New Construction" autocomplete="off" />
+          <div class="line-actions">
+            <button type="button" class="btn btn--small" id="qt-add-row">Add scope line</button>
+            <button type="button" class="btn btn--small btn--ghost" id="qt-del-row">Remove last line</button>
+          </div>
+          <div class="table-scroll">
+            <table class="edit-table" id="qt-lines-table">
+              <thead>
+                <tr>
+                  <th scope="col">Description</th>
+                  <th scope="col">Amount (optional)</th>
+                </tr>
+              </thead>
+              <tbody id="qt-lines-body"></tbody>
+            </table>
+          </div>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Notes</legend>
+          <label for="qt-note-inclusion">Inclusions / exclusions</label>
+          <textarea id="qt-note-inclusion" class="input input--area" rows="3"></textarea>
+          <label for="qt-note-timing">Project timing</label>
+          <textarea id="qt-note-timing" class="input input--area" rows="3"></textarea>
+          <label for="qt-note-landscape">Landscaping / additional</label>
+          <textarea id="qt-note-landscape" class="input input--area" rows="2"></textarea>
+          <label for="qt-transfer-email">Money transfer email (shown below table)</label>
+          <input type="text" id="qt-transfer-email" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Acceptance</legend>
+          <label for="qt-accept-head">Heading</label>
+          <input type="text" id="qt-accept-head" class="input" autocomplete="off" />
+          <label for="qt-accept-legal">Legal text</label>
+          <textarea id="qt-accept-legal" class="input input--area" rows="4"></textarea>
+          <label for="qt-accept-name">Owner name (blank line)</label>
+          <input type="text" id="qt-accept-name" class="input" autocomplete="off" />
+          <label for="qt-accept-date">Date</label>
+          <input type="text" id="qt-accept-date" class="input" autocomplete="off" />
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>Quote totals</legend>
+          <label for="qt-net">Net total</label>
+          <input type="text" id="qt-net" class="input" inputmode="decimal" autocomplete="off" />
+          <label for="qt-hst">HST</label>
+          <input type="text" id="qt-hst" class="input" inputmode="decimal" autocomplete="off" />
+          <label for="qt-payable">Payable</label>
+          <input type="text" id="qt-payable" class="input" inputmode="decimal" autocomplete="off" />
+        </fieldset>
+      </div>
+    </aside>
+
+    <section class="panel panel--preview" aria-label="Live preview">
+      <h2 class="preview-heading no-print">Preview</h2>
+      <div id="print-root" class="print-root"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast no-print" role="status" aria-live="polite" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+  <script>
+    if (typeof pdfjsLib !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" crossorigin="anonymous"></script>
+  <script src="app.js"></script>
+</body>
+</html>
