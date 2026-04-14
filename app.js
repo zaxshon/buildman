@@ -11,6 +11,17 @@
   var QUOTE_ACCEPT_LEGAL =
     "I/we _________________ the registered owners irrevocably authorize Buildman General Contracting to proceed with the work described in the above quote and agree to the terms and conditions of this agreement. I/we acknowledge receipt of a copy of this agreement.";
 
+  /** Fixed on quotes: e-transfer line and company-rep email stay in sync (not editable). */
+  var BUILDMAN_ETRANSFER_EMAIL = "alexzax1977@yahoo.com";
+  var BUILDMAN_REP_NAME_DEFAULT = "ALEX ZAX - Manager";
+  var BUILDMAN_REP_PHONE_DEFAULT = "(416) 319-0601";
+
+  function syncBuildmanQuoteEmails(q) {
+    if (!q || !q.rep) return;
+    q.transferEmail = BUILDMAN_ETRANSFER_EMAIL;
+    q.rep.email = BUILDMAN_ETRANSFER_EMAIL;
+  }
+
   var DEFAULT_INVOICE = {
     invoiceNumber: "",
     date: "",
@@ -36,14 +47,14 @@
       email: "",
     },
     rep: {
-      name: "",
-      phone: "",
-      email: "",
+      name: BUILDMAN_REP_NAME_DEFAULT,
+      phone: BUILDMAN_REP_PHONE_DEFAULT,
+      email: BUILDMAN_ETRANSFER_EMAIL,
     },
     scopeLines: [],
     noteExclusions: "",
     noteTiming: "",
-    transferEmail: "",
+    transferEmail: BUILDMAN_ETRANSFER_EMAIL,
     registeredOwnerName: "",
     netTotal: "",
     hst: "",
@@ -114,7 +125,6 @@
     out.quoteNumber = strVal(q.quoteNumber);
     out.noteExclusions = strVal(q.noteExclusions || q.noteInclusion);
     out.noteTiming = strVal(q.noteTiming);
-    out.transferEmail = strVal(q.transferEmail);
     out.registeredOwnerName = strVal(q.registeredOwnerName || q.acceptName);
     out.netTotal = strVal(q.netTotal);
     out.hst = strVal(q.hst);
@@ -129,13 +139,13 @@
     if (q.rep && typeof q.rep === "object") {
       out.rep.name = strVal(q.rep.name);
       out.rep.phone = strVal(q.rep.phone);
-      out.rep.email = strVal(q.rep.email);
     }
     if (Array.isArray(q.scopeLines) && q.scopeLines.length) {
       out.scopeLines = q.scopeLines.map(function (r) {
         return { desc: strVal(r.desc), amt: strVal(r.amt) };
       });
     }
+    syncBuildmanQuoteEmails(out);
     return out;
   }
 
@@ -308,6 +318,7 @@
   function freshQuote() {
     var q = deepClone(DEFAULT_QUOTE);
     q.scopeLines = buildDefaultQuoteScope();
+    syncBuildmanQuoteEmails(q);
     return q;
   }
 
@@ -580,8 +591,7 @@
       repLines.push("<p>" + escapeHtml(r.name) + "</p>");
     if (r.phone && String(r.phone).trim())
       repLines.push("<p>" + escapeHtml(r.phone) + "</p>");
-    if (r.email && String(r.email).trim())
-      repLines.push("<p>" + escapeHtml(r.email) + "</p>");
+    repLines.push("<p>" + escapeHtml(BUILDMAN_ETRANSFER_EMAIL) + "</p>");
     var rowsHtml = "";
     var i;
     for (i = 0; i < q.scopeLines.length; i++) {
@@ -637,11 +647,9 @@
       "<thead><tr><th scope=\"col\">Product / services</th><th scope=\"col\">Amount</th></tr></thead><tbody>" +
       rowsHtml +
       "</tbody></table>" +
-      (q.transferEmail && String(q.transferEmail).trim()
-        ? '<p class="quote-transfer">Email address for money transfer ' +
-          escapeHtml(q.transferEmail) +
-          "</p>"
-        : "") +
+      '<p class="quote-transfer">Email address for money transfer ' +
+      escapeHtml(BUILDMAN_ETRANSFER_EMAIL) +
+      "</p>" +
       notesBlock +
       '<div class="quote-bottom">' +
       '<div class="quote-accept">' +
@@ -799,11 +807,10 @@
     q.customer.email = document.getElementById("qt-cust-email").value;
     q.rep.name = document.getElementById("qt-rep-name").value;
     q.rep.phone = document.getElementById("qt-rep-phone").value;
-    q.rep.email = document.getElementById("qt-rep-email").value;
     q.noteExclusions = document.getElementById("qt-note-exclusions").value;
     q.noteTiming = document.getElementById("qt-note-timing").value;
-    q.transferEmail = document.getElementById("qt-transfer-email").value;
     q.registeredOwnerName = document.getElementById("qt-owner-name").value;
+    syncBuildmanQuoteEmails(q);
     q.netTotal = document.getElementById("qt-net").value;
     q.hst = document.getElementById("qt-hst").value;
     q.payable = document.getElementById("qt-payable").value;
@@ -829,15 +836,14 @@
     document.getElementById("qt-cust-addr").value = q.customer.address;
     document.getElementById("qt-cust-phone").value = q.customer.phone;
     document.getElementById("qt-cust-email").value = q.customer.email;
+    syncBuildmanQuoteEmails(q);
     document.getElementById("qt-rep-name").value = q.rep.name;
     document.getElementById("qt-rep-phone").value = q.rep.phone;
-    document.getElementById("qt-rep-email").value = q.rep.email;
     document.getElementById("qt-note-exclusions").value =
       q.noteExclusions != null && q.noteExclusions !== ""
         ? q.noteExclusions
         : q.noteInclusion || "";
     document.getElementById("qt-note-timing").value = q.noteTiming;
-    document.getElementById("qt-transfer-email").value = q.transferEmail;
     document.getElementById("qt-owner-name").value =
       q.registeredOwnerName != null && q.registeredOwnerName !== ""
         ? q.registeredOwnerName
@@ -950,6 +956,11 @@
       lines.push("Customer: " + q.customer.name);
       lines.push(q.customer.address);
       lines.push("");
+      lines.push("Buildman contact:");
+      lines.push((q.rep.name || "").trim());
+      lines.push((q.rep.phone || "").trim());
+      lines.push(BUILDMAN_ETRANSFER_EMAIL);
+      lines.push("");
       lines.push("Scope:");
       q.scopeLines.forEach(function (row, idx) {
         if (!row.desc || !row.desc.trim()) return;
@@ -964,12 +975,10 @@
       lines.push(QUOTE_ACCEPT_HEADING);
       lines.push(QUOTE_ACCEPT_LEGAL);
       lines.push("");
-      if (q.transferEmail && String(q.transferEmail).trim()) {
-        lines.push(
-          "Email address for money transfer " + String(q.transferEmail).trim()
-        );
-        lines.push("");
-      }
+      lines.push(
+        "Email address for money transfer " + BUILDMAN_ETRANSFER_EMAIL
+      );
+      lines.push("");
       var owner =
         q.registeredOwnerName != null && q.registeredOwnerName !== ""
           ? q.registeredOwnerName
@@ -1019,6 +1028,7 @@
       state.quote = deepClone(state.quote);
       var qN = String(state.quote.quoteNumber || "").trim();
       state.quote.quoteNumber = qN ? qN + "-COPY" : "COPY";
+      syncBuildmanQuoteEmails(state.quote);
       writeQuoteEditors();
     }
     renderPreview();
@@ -1195,10 +1205,8 @@
         "qt-cust-email",
         "qt-rep-name",
         "qt-rep-phone",
-        "qt-rep-email",
         "qt-note-exclusions",
         "qt-note-timing",
-        "qt-transfer-email",
         "qt-owner-name",
         "qt-net",
         "qt-hst",
