@@ -684,6 +684,51 @@ body {
   margin: 0.5rem 0 0.75rem;
 }
 
+.quote-exclusions,
+.quote-note-block {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.65rem;
+  font-size: 10pt;
+}
+
+.quote-exclusions p,
+.quote-note-block p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.quote-owner-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0.65rem 0 0.5rem;
+  font-size: 9.5pt;
+}
+
+.quote-owner-label {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
+.quote-owner-field {
+  flex: 1 1 auto;
+  border-bottom: 1px solid #000;
+  min-height: 1.35rem;
+  padding: 0 0.15rem 0.1rem;
+}
+
+.quote-signature-block {
+  margin-top: 1rem;
+  font-size: 9.5pt;
+}
+
+.quote-signature-pad {
+  margin-top: 0.45rem;
+  min-height: 3rem;
+  border-bottom: 2px solid #000;
+}
+
 .quote-notes {
   border: 1px solid var(--border);
   padding: 0.5rem 0.65rem;
@@ -728,8 +773,8 @@ body {
 }
 
 .quote-accept__legal {
-  margin-bottom: 0.65rem;
-  white-space: pre-wrap;
+  margin: 0 0 0.65rem;
+  white-space: normal;
 }
 
 .quote-totals-wrap {
@@ -757,6 +802,11 @@ body {
 .quote-totals td:last-child {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.quote-totals__amt {
+  min-height: 1.75rem;
+  vertical-align: middle;
 }
 
 .quote-totals tr.payable td {

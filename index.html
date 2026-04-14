@@ -32,6 +32,11 @@
         <button type="button" class="btn btn--ghost" id="btn-duplicate">Duplicate</button>
         <button type="button" class="btn btn--ghost" id="btn-reset">Reset</button>
         <button type="button" class="btn" id="btn-print">Print PDF</button>
+        <button type="button" class="btn btn--ghost" id="btn-export-pdf">Export PDF</button>
+        <label class="btn btn--ghost file-import">
+          Import PDF
+          <input type="file" id="import-pdf" accept="application/pdf,.pdf" hidden />
+        </label>
         <button type="button" class="btn btn--ghost" id="btn-share">Share</button>
       </div>
     </div>
@@ -143,9 +148,7 @@
           <input type="text" id="qt-rep-email" class="input" autocomplete="off" />
         </fieldset>
         <fieldset class="fieldset">
-          <legend>Scope section</legend>
-          <label for="qt-section">Section title</label>
-          <input type="text" id="qt-section" class="input" placeholder="e.g. New Construction" autocomplete="off" />
+          <legend>Scope of work</legend>
           <div class="line-actions">
             <button type="button" class="btn btn--small" id="qt-add-row">Add scope line</button>
             <button type="button" class="btn btn--small btn--ghost" id="qt-del-row">Remove last line</button>
@@ -164,21 +167,18 @@
         </fieldset>
         <fieldset class="fieldset">
           <legend>Notes</legend>
-          <label for="qt-note-inclusion">Inclusions / exclusions</label>
-          <textarea id="qt-note-inclusion" class="input input--area" rows="3"></textarea>
+          <label for="qt-note-exclusions">Exclusions</label>
+          <textarea id="qt-note-exclusions" class="input input--area" rows="3"></textarea>
           <label for="qt-note-timing">Project timing</label>
           <textarea id="qt-note-timing" class="input input--area" rows="3"></textarea>
-          <label for="qt-note-landscape">Landscaping / additional</label>
-          <textarea id="qt-note-landscape" class="input input--area" rows="2"></textarea>
-          <label for="qt-transfer-email">Money transfer email (line: “Email address for money transfer …”)</label>
+          <label for="qt-transfer-email">Money transfer email (below scope table)</label>
           <input type="text" id="qt-transfer-email" class="input" autocomplete="off" />
         </fieldset>
         <fieldset class="fieldset">
-          <legend>Acceptance (footer)</legend>
-          <label for="qt-accept-head">Heading</label>
-          <input type="text" id="qt-accept-head" class="input" autocomplete="off" />
-          <label for="qt-accept-legal">Legal text</label>
-          <textarea id="qt-accept-legal" class="input input--area" rows="5"></textarea>
+          <legend>Acceptance (signature area)</legend>
+          <p class="hint">Heading and legal wording are fixed on the quote. Add the owner name here; leave room on the printed page to sign.</p>
+          <label for="qt-owner-name">Registered owner(s) name (prints on quote)</label>
+          <input type="text" id="qt-owner-name" class="input" autocomplete="off" />
         </fieldset>
         <fieldset class="fieldset">
           <legend>Quote totals</legend>
@@ -200,6 +200,15 @@
 
   <div id="toast" class="toast no-print" role="status" aria-live="polite" hidden></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
+  <script>
+    if (typeof pdfjsLib !== "undefined") {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" crossorigin="anonymous"></script>
   <script src="app.js"></script>
 </body>
 </html>
