@@ -40,14 +40,14 @@
     noteInclusion: "",
     noteTiming: "",
     noteLandscape: "",
-    transferEmail: "",
-    acceptHeading: "",
-    acceptLegal: "",
-    acceptName: "",
-    acceptDate: "",
-    netTotal: "",
-    hst: "",
-    payable: "",
+    transferEmail: "alexzax1977@yahoo.com",
+    acceptHeading:
+      "Acceptance - Please sign and call Alex or email quote to above address",
+    acceptLegal:
+      "I/we [blank line for name] the registered owners irrevocably authorize Buildman General Contracting to proceed with the work described in the above quote and agree to the terms and conditions of this agreement. I/we acknowledge receipt of a copy of this agreement.",
+    netTotal: "1,300,000.00",
+    hst: "169,000.00",
+    payable: "1,469,000.00",
     skipAutoTotals: false,
   };
 
@@ -68,236 +68,6 @@
     for (i = 0; i < QUOTE_SCOPE_LINE_COUNT; i++)
       rows.push({ desc: "", amt: "" });
     return rows;
-  }
-
-  var BUILDMAN_STATE_FILENAME = "buildman-state.json";
-
-  function strVal(v) {
-    return v == null ? "" : String(v);
-  }
-
-  function normalizeImportedInvoice(inv) {
-    var out = freshInvoice();
-    if (!inv || typeof inv !== "object") return out;
-    out.invoiceNumber = strVal(inv.invoiceNumber);
-    out.date = strVal(inv.date);
-    out.salesperson = strVal(inv.salesperson);
-    out.orderNo = strVal(inv.orderNo);
-    out.terms = strVal(inv.terms);
-    out.subtotal = strVal(inv.subtotal);
-    out.hst = strVal(inv.hst);
-    out.pst = strVal(inv.pst);
-    out.total = strVal(inv.total);
-    out.skipAutoTotals = !!inv.skipAutoTotals;
-    if (Array.isArray(inv.toLines)) {
-      out.toLines = [0, 1, 2].map(function (i) {
-        return strVal(inv.toLines[i]);
-      });
-    }
-    if (Array.isArray(inv.items) && inv.items.length) {
-      out.items = inv.items.map(function (r) {
-        return {
-          q: strVal(r.q),
-          d: strVal(r.d),
-          p: strVal(r.p),
-          a: strVal(r.a),
-        };
-      });
-    }
-    return out;
-  }
-
-  function normalizeImportedQuote(q) {
-    var out = freshQuote();
-    if (!q || typeof q !== "object") return out;
-    out.quoteDate = strVal(q.quoteDate);
-    out.quoteNumber = strVal(q.quoteNumber);
-    out.sectionTitle = strVal(q.sectionTitle);
-    out.noteInclusion = strVal(q.noteInclusion);
-    out.noteTiming = strVal(q.noteTiming);
-    out.noteLandscape = strVal(q.noteLandscape);
-    out.transferEmail = strVal(q.transferEmail);
-    out.acceptHeading = strVal(q.acceptHeading);
-    out.acceptLegal = strVal(q.acceptLegal);
-    out.acceptName = strVal(q.acceptName);
-    out.acceptDate = strVal(q.acceptDate);
-    out.netTotal = strVal(q.netTotal);
-    out.hst = strVal(q.hst);
-    out.payable = strVal(q.payable);
-    out.skipAutoTotals = !!q.skipAutoTotals;
-    if (q.customer && typeof q.customer === "object") {
-      out.customer.name = strVal(q.customer.name);
-      out.customer.address = strVal(q.customer.address);
-      out.customer.phone = strVal(q.customer.phone);
-      out.customer.email = strVal(q.customer.email);
-    }
-    if (q.rep && typeof q.rep === "object") {
-      out.rep.name = strVal(q.rep.name);
-      out.rep.phone = strVal(q.rep.phone);
-      out.rep.email = strVal(q.rep.email);
-    }
-    if (Array.isArray(q.scopeLines) && q.scopeLines.length) {
-      out.scopeLines = q.scopeLines.map(function (r) {
-        return { desc: strVal(r.desc), amt: strVal(r.amt) };
-      });
-    }
-    return out;
-  }
-
-  function buildStatePayload() {
-    return {
-      buildmanExportVersion: 1,
-      mode: state.mode,
-      autoTotals: state.autoTotals,
-      taxRate: state.taxRate,
-      invoice: deepClone(state.invoice),
-      quote: deepClone(state.quote),
-    };
-  }
-
-  function applyImportedPayload(data) {
-    if (!data || data.buildmanExportVersion !== 1) {
-      throw new Error("Invalid Buildman data");
-    }
-    if (data.invoice) state.invoice = normalizeImportedInvoice(data.invoice);
-    if (data.quote) state.quote = normalizeImportedQuote(data.quote);
-    if (typeof data.autoTotals === "boolean") state.autoTotals = data.autoTotals;
-    if (data.taxRate != null) state.taxRate = String(data.taxRate);
-    document.getElementById("auto-totals").checked = state.autoTotals;
-    document.getElementById("tax-rate").value = state.taxRate;
-    if (data.mode === "invoice" || data.mode === "quote") setMode(data.mode);
-    else setMode(state.mode);
-  }
-
-  async function exportPdfFile() {
-    if (typeof html2pdf === "undefined") {
-      showToast("PDF export library did not load. Check your connection.");
-      return;
-    }
-    if (typeof PDFLib === "undefined") {
-      showToast("PDF library did not load. Check your connection.");
-      return;
-    }
-    if (state.mode === "invoice") readInvoiceFromEditors();
-    else readQuoteFromEditors();
-    renderPreview();
-
-    var el = document.querySelector("#print-root .doc");
-    if (!el) {
-      showToast("Nothing to export.");
-      return;
-    }
-
-    showToast("Building PDF…");
-
-    var payload = buildStatePayload();
-    var jsonBytes = new TextEncoder().encode(JSON.stringify(payload));
-
-    var opt = {
-      margin: [0.4, 0.4, 0.4, 0.4],
-      image: { type: "jpeg", quality: 0.92 },
-      html2canvas: {
-        scale: Math.min(2, window.devicePixelRatio || 2),
-        useCORS: true,
-        logging: false,
-        letterRendering: true,
-      },
-      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-    };
-
-    try {
-      var pdfArrayBuffer = await html2pdf()
-        .set(opt)
-        .from(el)
-        .outputPdf("arraybuffer");
-
-      var pdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
-      try {
-        await pdfDoc.attach(jsonBytes, BUILDMAN_STATE_FILENAME, {
-          mimeType: "application/json",
-          description: "Buildman Inc. editable document",
-        });
-      } catch (attachErr) {
-        console.warn(attachErr);
-      }
-
-      var outBytes = await pdfDoc.save();
-      var blob = new Blob([outBytes], { type: "application/pdf" });
-      var a = document.createElement("a");
-      var stamp = new Date().toISOString().slice(0, 10);
-      a.href = URL.createObjectURL(blob);
-      a.download = "buildman-" + state.mode + "-" + stamp + ".pdf";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      showToast("PDF downloaded. Re-import here to edit again.");
-    } catch (err) {
-      console.error(err);
-      showToast("PDF export failed. Try Print PDF instead.");
-    }
-  }
-
-  async function importPdfFile(file) {
-    if (typeof pdfjsLib === "undefined") {
-      showToast("PDF import library did not load. Check your connection.");
-      return;
-    }
-    var buf;
-    try {
-      buf = await file.arrayBuffer();
-    } catch (e) {
-      showToast("Could not read file.");
-      return;
-    }
-
-    var pdf = null;
-    try {
-      var loadingTask = pdfjsLib.getDocument({ data: buf });
-      pdf = await loadingTask.promise;
-      if (typeof pdf.getAttachments !== "function") {
-        showToast("PDF import is not available in this browser.");
-        return;
-      }
-      var attachments = await pdf.getAttachments();
-
-      if (!attachments || !Object.keys(attachments).length) {
-        showToast("No app data in PDF. Export from this app first.");
-        return;
-      }
-
-      var decoded = null;
-      var key;
-      for (key in attachments) {
-        if (!Object.prototype.hasOwnProperty.call(attachments, key)) continue;
-        var att = attachments[key];
-        var content = att && (att.content || att.data);
-        if (!content) continue;
-        var bytes = content instanceof Uint8Array ? content : new Uint8Array(content);
-        var text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-        try {
-          var data = JSON.parse(text);
-          if (data && data.buildmanExportVersion === 1) {
-            decoded = data;
-            break;
-          }
-        } catch (parseErr) {
-          /* try next */
-        }
-      }
-
-      if (!decoded) {
-        showToast("No Buildman data in this PDF. Use Export PDF from this app.");
-        return;
-      }
-
-      applyImportedPayload(decoded);
-      showToast("Imported from PDF.");
-    } catch (err) {
-      console.error(err);
-      showToast("Could not read PDF.");
-    } finally {
-      if (pdf && typeof pdf.destroy === "function") pdf.destroy();
-    }
   }
 
   function deepClone(obj) {
@@ -650,7 +420,7 @@
       rowsHtml +
       "</tbody></table>" +
       (q.transferEmail && String(q.transferEmail).trim()
-        ? '<p class="quote-transfer">Email address for money transfer: ' +
+        ? '<p class="quote-transfer">Email address for money transfer ' +
           escapeHtml(q.transferEmail) +
           "</p>"
         : "") +
@@ -666,31 +436,21 @@
       (q.acceptLegal && String(q.acceptLegal).trim()
         ? formatMultiline(q.acceptLegal)
         : "&nbsp;") +
-      "</div>" +
-      (q.acceptName && String(q.acceptName).trim()
-        ? "<p><strong>Registered owner(s):</strong> " +
-          escapeHtml(q.acceptName) +
-          "</p>"
-        : "") +
-      "<div><strong>Customer(s) signature</strong></div>" +
-      '<div class="sig-line">&nbsp;</div>' +
-      "<div class=\"sig-row\"><strong>Date:</strong> " +
-      escapeHtml(q.acceptDate) +
       "</div></div>" +
       '<div class="quote-totals-wrap">' +
       '<table class="quote-totals" role="table">' +
       "<tbody>" +
-      "<tr><td>Net total</td><td>" +
+      "<tr><td>Net Total</td><td>" +
       (displayMoneyOrBlank(q.netTotal) || "&nbsp;") +
       "</td></tr>" +
       "<tr><td>HST</td><td>" +
       (displayMoneyOrBlank(q.hst) || "&nbsp;") +
       "</td></tr>" +
-      '<tr class="payable"><td>Payable</td><td>' +
+      '<tr class="payable"><td>Total Payable</td><td>' +
       (displayMoneyOrBlank(q.payable) || "&nbsp;") +
       "</td></tr>" +
       "</tbody></table>" +
-      '<p class="quote-valid">Quote valid for 30 calendar days</p>' +
+      '<p class="quote-valid">Quote Valid for 30 Calendar Days</p>' +
       "</div></div>" +
       '<p class="quote-doc-footer">Customer quote</p>' +
       "</article>"
@@ -822,8 +582,6 @@
     q.transferEmail = document.getElementById("qt-transfer-email").value;
     q.acceptHeading = document.getElementById("qt-accept-head").value;
     q.acceptLegal = document.getElementById("qt-accept-legal").value;
-    q.acceptName = document.getElementById("qt-accept-name").value;
-    q.acceptDate = document.getElementById("qt-accept-date").value;
     q.netTotal = document.getElementById("qt-net").value;
     q.hst = document.getElementById("qt-hst").value;
     q.payable = document.getElementById("qt-payable").value;
@@ -859,8 +617,6 @@
     document.getElementById("qt-transfer-email").value = q.transferEmail;
     document.getElementById("qt-accept-head").value = q.acceptHeading;
     document.getElementById("qt-accept-legal").value = q.acceptLegal;
-    document.getElementById("qt-accept-name").value = q.acceptName;
-    document.getElementById("qt-accept-date").value = q.acceptDate;
     document.getElementById("qt-net").value = q.netTotal;
     document.getElementById("qt-hst").value = q.hst;
     document.getElementById("qt-payable").value = q.payable;
@@ -971,11 +727,25 @@
         lines.push("• " + row.desc.replace(/\s+/g, " ").trim());
       });
       lines.push("");
-      lines.push("Net: " + (q.netTotal || "").trim());
+      if (q.acceptHeading && String(q.acceptHeading).trim()) {
+        lines.push(String(q.acceptHeading).trim());
+        lines.push("");
+      }
+      if (q.acceptLegal && String(q.acceptLegal).trim()) {
+        lines.push(String(q.acceptLegal).trim());
+        lines.push("");
+      }
+      if (q.transferEmail && String(q.transferEmail).trim()) {
+        lines.push(
+          "Email address for money transfer " + String(q.transferEmail).trim()
+        );
+        lines.push("");
+      }
+      lines.push("Net Total: " + (q.netTotal || "").trim());
       lines.push("HST: " + (q.hst || "").trim());
-      lines.push("Payable: " + (q.payable || "").trim());
+      lines.push("Total Payable: " + (q.payable || "").trim());
       lines.push("");
-      lines.push("Quote valid for 30 calendar days.");
+      lines.push("Quote Valid for 30 Calendar Days.");
     }
     return lines.join("\n");
   }
@@ -1066,14 +836,6 @@
       else readQuoteFromEditors();
       renderPreview();
       window.print();
-    });
-    document.getElementById("btn-export-pdf").addEventListener("click", function () {
-      exportPdfFile();
-    });
-    document.getElementById("import-pdf").addEventListener("change", function (e) {
-      var f = e.target.files && e.target.files[0];
-      if (f) importPdfFile(f);
-      e.target.value = "";
     });
     document.getElementById("btn-share").addEventListener("click", function () {
       if (state.mode === "invoice") readInvoiceFromEditors();
@@ -1196,8 +958,6 @@
         "qt-transfer-email",
         "qt-accept-head",
         "qt-accept-legal",
-        "qt-accept-name",
-        "qt-accept-date",
         "qt-net",
         "qt-hst",
         "qt-payable",

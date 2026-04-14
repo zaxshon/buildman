@@ -32,11 +32,6 @@
         <button type="button" class="btn btn--ghost" id="btn-duplicate">Duplicate</button>
         <button type="button" class="btn btn--ghost" id="btn-reset">Reset</button>
         <button type="button" class="btn" id="btn-print">Print PDF</button>
-        <button type="button" class="btn btn--ghost" id="btn-export-pdf">Export PDF</button>
-        <label class="btn btn--ghost file-import">
-          Import PDF
-          <input type="file" id="import-pdf" accept="application/pdf,.pdf" hidden />
-        </label>
         <button type="button" class="btn btn--ghost" id="btn-share">Share</button>
       </div>
     </div>
@@ -175,27 +170,23 @@
           <textarea id="qt-note-timing" class="input input--area" rows="3"></textarea>
           <label for="qt-note-landscape">Landscaping / additional</label>
           <textarea id="qt-note-landscape" class="input input--area" rows="2"></textarea>
-          <label for="qt-transfer-email">Money transfer email (shown below table)</label>
+          <label for="qt-transfer-email">Money transfer email (line: “Email address for money transfer …”)</label>
           <input type="text" id="qt-transfer-email" class="input" autocomplete="off" />
         </fieldset>
         <fieldset class="fieldset">
-          <legend>Acceptance</legend>
+          <legend>Acceptance (footer)</legend>
           <label for="qt-accept-head">Heading</label>
           <input type="text" id="qt-accept-head" class="input" autocomplete="off" />
           <label for="qt-accept-legal">Legal text</label>
-          <textarea id="qt-accept-legal" class="input input--area" rows="4"></textarea>
-          <label for="qt-accept-name">Owner name (blank line)</label>
-          <input type="text" id="qt-accept-name" class="input" autocomplete="off" />
-          <label for="qt-accept-date">Date</label>
-          <input type="text" id="qt-accept-date" class="input" autocomplete="off" />
+          <textarea id="qt-accept-legal" class="input input--area" rows="5"></textarea>
         </fieldset>
         <fieldset class="fieldset">
           <legend>Quote totals</legend>
-          <label for="qt-net">Net total</label>
+          <label for="qt-net">Net Total</label>
           <input type="text" id="qt-net" class="input" inputmode="decimal" autocomplete="off" />
           <label for="qt-hst">HST</label>
           <input type="text" id="qt-hst" class="input" inputmode="decimal" autocomplete="off" />
-          <label for="qt-payable">Payable</label>
+          <label for="qt-payable">Total Payable</label>
           <input type="text" id="qt-payable" class="input" inputmode="decimal" autocomplete="off" />
         </fieldset>
       </div>
@@ -209,15 +200,6 @@
 
   <div id="toast" class="toast no-print" role="status" aria-live="polite" hidden></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous"></script>
-  <script>
-    if (typeof pdfjsLib !== "undefined") {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-    }
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" crossorigin="anonymous"></script>
   <script src="app.js"></script>
 </body>
 </html>
